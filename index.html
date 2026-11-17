@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSBM Frame Data Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Melee menu fonts: Anton (headers) + Barlow Condensed (body) ── */
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0a0618;
+  --surface:   rgba(13,16,38,.88);
+  --card:      rgba(20,26,56,.88);
+  --border:    #2e3f8f;
+  --accent:    #f0c040;
+  --accent2:   #5b8cff;
+  --safe:      #2ecc71;
+  --unsafe:    #ff5a5a;
+  --text:      #e8ecf8;
+  --muted:     #8a93b8;
+  --gold:      #f0c040;
+  --purple:    #8b5cf6;
+  --radius:    6px;
+  --shadow:    0 4px 24px rgba(0,0,0,.5);
+}
+body {
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+header {
+  background: linear-gradient(135deg, #0a0c12 0%, #1a2040 100%);
+  border-bottom: 2px solid var(--accent);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+header .logo { width: 42px; height: 42px; object-fit: contain; display: block; }
+header h1  { font-size: 1.25rem; color: var(--accent); letter-spacing: .5px; }
+header p   { font-size: .75rem; color: var(--muted); }
+header .badge {
+  margin-left: auto;
+  font-size: .7rem;
+  background: var(--accent);
+  color: #000;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 2px;
+  padding: 0 16px;
+  overflow-x: auto;
+}
+nav button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 13px 20px;
+  cursor: pointer;
+  font-size: .9rem;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: color .2s, border-color .2s;
+}
+nav button:hover { color: var(--text); }
+nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+main { display: flex; flex: 1; gap: 0; }
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 12px 8px;
+  overflow-y: auto;
+  max-height: calc(100vh - 110px);
+}
+.content { flex: 1; padding: 20px; overflow-y: auto; max-height: calc(100vh - 110px); }
+.sidebar h3 { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 4px 8px 8px; }
+.char-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: rgba(20,26,56,.9);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .88rem;
+  transition: background .15s;
+}
+.char-btn:hover  { background: var(--card); border-color: var(--accent2); box-shadow: 0 0 12px rgba(91,140,255,.35); }
+.char-btn.active { background: var(--accent); color: #000; font-weight: 700; }
+.tier-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: auto;
+}
+.tier-S { background:#f0c040; color:#000; }
+.tier-A { background:#3a7bd5; color:#fff; }
+.tier-B { background:#8b5cf6; color:#fff; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 10px; }
+.card h3 { font-size: .9rem; color: var(--accent2); margin-bottom: 8px; }
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-item { background: var(--surface); border-radius: 6px; padding: 8px 10px; text-align: center; }
+.stat-item .val { font-size: 1.2rem; font-weight: 700; color: var(--gold); }
+.stat-item .lbl { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+thead th {
+  background: var(--surface);
+  color: var(--gold);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; cursor: pointer; }
+tbody tr:hover { background: var(--surface); }
+tbody td { padding: 7px 10px; vertical-align: middle; }
+.fadv-pos { color: var(--safe);   font-weight: 700; }
+.fadv-neg { color: var(--unsafe); font-weight: 700; }
+.fadv-zer { color: var(--muted);  font-weight: 700; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; align-items: flex-end; }
+.ctrl-group { display: flex; flex-direction: column; gap: 4px; }
+.ctrl-group label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+select, input[type=number], input[type=text] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: .85rem;
+  min-width: 140px;
+  outline: none;
+  transition: border-color .2s;
+}
+select:focus, input:focus { border-color: var(--accent); }
+input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  padding: 7px 18px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: .85rem;
+  transition: opacity .2s;
+}
+.btn:hover { opacity: .85; }
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: .82rem;
+  transition: border-color .2s, color .2s;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.show { display: flex; }
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  width: min(560px, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.modal h2 { color: var(--accent); margin-bottom: 14px; font-size: 1.1rem; }
+.modal-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.note-item {
+  background: var(--surface);
+  border-left: 3px solid var(--accent2);
+  border-radius: 4px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  font-size: .84rem;
+}
+.note-item .author { font-size: .72rem; color: var(--muted); margin-top: 5px; }
+.note-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.note-form textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 8px;
+  font-size: .84rem;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+  outline: none;
+}
+.note-form textarea:focus { border-color: var(--accent); }
+.note-form-row { display: flex; gap: 8px; }
+.mu-score {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: .82rem;
+}
+.mu-pos { background: rgba(46,204,113,.2); color: var(--safe); }
+.mu-neg { background: rgba(231,76,60,.2);  color: var(--unsafe); }
+.mu-zer { background: rgba(107,117,144,.2); color: var(--muted); }
+.empty { color: var(--muted); font-size: .88rem; padding: 20px; text-align: center; }
+.loading { color: var(--muted); font-size: .84rem; padding: 10px 0; }
+.chip {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.chip-ground  { background: rgba(58,123,213,.25); color: #6aa3f5; }
+.chip-aerial  { background: rgba(232,170,20,.2);  color: var(--gold); }
+.chip-special { background: rgba(46,204,113,.2);  color: var(--safe); }
+.chip-grab    { background: rgba(231,76,60,.2);   color: #f08080; }
+@media (max-width: 640px) { .sidebar { display: none; } }
+/* ── Melee menu background video ──────────────────────────────── */
+#bg-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6,4,20,.55) 0%, rgba(6,4,20,.68) 60%, rgba(6,4,20,.8) 100%);
+  z-index: -1;
+}
+@media (max-width: 640px), (prefers-reduced-motion: reduce) {
+  #bg-video { display: none; }
+  body {
+    background-image: url('/static/melee-menu-poster.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+}
+/* ── Melee header / nav ───────────────────────────────────────── */
+header h1 {
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transform: skewX(-6deg);
+  text-shadow: 0 2px 12px rgba(240,192,64,.35);
+}
+header .logo { width: 46px; height: 46px; }
+nav button {
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: .85rem;
+}
+.card h2 {
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 1.05rem;
+}
+.btn { text-transform: uppercase; letter-spacing: 1px; }
+/* ── VS screen (matchup modal) ────────────────────────────────── */
+.vs-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.vs-char {
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transform: skewX(-6deg);
+}
+.vs-mid {
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  font-size: 2rem;
+  color: var(--gold);
+  transform: skewX(-6deg);
+  text-shadow: 0 0 18px rgba(240,192,64,.6);
+}
+footer {
+  text-align: center;
+  font-size: .72rem;
+  color: var(--muted);
+  padding: 16px 12px 22px;
+}
+</style>
+</head>
+<body>
+
+<video id="bg-video" autoplay muted loop playsinline preload="auto" poster="/static/melee-menu-poster.jpg">
+  <source src="/static/melee-menu-bg.mp4" type="video/mp4">
+</video>
+<div class="bg-overlay"></div>
+
+<header>
+  <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#fff" stroke-width="8"/><path d="M50 14v72M14 50h72" stroke="#fff" stroke-width="13"/></svg>
+  <div>
+    <h1>SSBM Frame Data</h1>
+    <p>Super Smash Bros. Melee &middot; Evan Mindanao</p>
+  </div>
+  <span class="badge">SQLite3</span>
+</header>
+
+<nav id="nav">
+  <button class="active" onclick="showTab('chars')">📋 Characters</button>
+  <button onclick="showTab('compare')">⚖️ Move Comparison</button>
+  <button onclick="showTab('filter')">🔍 Frame Filter</button>
+  <button onclick="showTab('matchups')">🆚 Matchups</button>
+</nav>
+
+<main>
+  <div class="sidebar" id="sidebar">
+    <h3>Characters</h3>
+    <div id="char-list"></div>
+  </div>
+
+  <div class="content" id="content">
+
+    <div id="tab-chars">
+      <div class="card" id="char-detail">
+        <p class="empty">← Select a character to view their frame data</p>
+      </div>
+    </div>
+
+    <div id="tab-compare" style="display:none">
+      <div class="card">
+        <h2>⚖️ Compare Move Across Characters</h2>
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>Move Name</label>
+            <select id="cmp-move">
+              <option value="">— select a move —</option>
+            </select>
+          </div>
+          <button class="btn" onclick="runCompare()">Compare</button>
+        </div>
+        <div id="cmp-result"><p class="empty">Select a move above and click Compare.</p></div>
+      </div>
+    </div>
+
+    <div id="tab-filter" style="display:none">
+      <div class="card">
+        <h2>🔍 Find Moves by Frame Properties</h2>
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>Max Startup Frames</label>
+            <input type="number" id="f-startup" min="1" max="60" placeholder="e.g. 5">
+          </div>
+          <div class="ctrl-group">
+            <label>Min Damage %</label>
+            <input type="number" id="f-damage" min="0" max="50" placeholder="e.g. 10">
+          </div>
+          <div class="ctrl-group">
+            <label>Move Type</label>
+            <select id="f-type">
+              <option value="">All Types</option>
+              <option value="ground">Ground</option>
+              <option value="aerial">Aerial</option>
+              <option value="special">Special</option>
+              <option value="grab">Grab</option>
+            </select>
+          </div>
+          <div class="ctrl-group" style="flex-direction:row;align-items:center;gap:6px;padding-top:18px">
+            <input type="checkbox" id="f-safe">
+            <label for="f-safe" style="font-size:.82rem;text-transform:none;letter-spacing:0;cursor:pointer">Safe on shield only</label>
+          </div>
+          <button class="btn" onclick="runFilter()">Search</button>
+          <button class="btn-ghost" onclick="clearFilter()">Clear</button>
+        </div>
+        <div id="filter-result"><p class="empty">Set criteria above and click Search.</p></div>
+      </div>
+    </div>
+
+    <div id="tab-matchups" style="display:none">
+      <div class="card">
+        <h2>🆚 Character Matchup Chart</h2>
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>Filter by Character</label>
+            <select id="mu-char-filter">
+              <option value="">All Characters</option>
+            </select>
+          </div>
+          <button class="btn" onclick="loadMatchups()">Load</button>
+        </div>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:10px">
+          Click any row to view matchup notes. Score is from perspective of Char 1 (positive = Char 1 wins).
+        </p>
+        <div id="matchup-result"><p class="empty loading">Loading matchups…</p></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="overlay" id="overlay-move" onclick="closeModal('overlay-move')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('overlay-move')">✕</button>
+    <h2 id="modal-move-title">Move Notes</h2>
+    <div id="modal-move-body"></div>
+    <div class="note-form" id="modal-move-form">
+      <label style="font-size:.78rem;color:var(--muted)">Add Community Note</label>
+      <textarea id="new-move-note" placeholder="Strategic tip or observation…"></textarea>
+      <div class="note-form-row">
+        <input type="text" id="new-move-author" placeholder="Your name / handle" style="flex:1">
+        <button class="btn" onclick="submitMoveNote()">Post Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-mu" onclick="closeModal('overlay-mu')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('overlay-mu')">✕</button>
+    <h2 id="modal-mu-title">Matchup Notes</h2>
+    <div id="modal-mu-body"></div>
+    <div class="note-form" id="modal-mu-form">
+      <label style="font-size:.78rem;color:var(--muted)">Add Community Note</label>
+      <textarea id="new-mu-note" placeholder="Matchup analysis or strategy…"></textarea>
+      <div class="note-form-row">
+        <input type="text" id="new-mu-author" placeholder="Your name / handle" style="flex:1">
+        <button class="btn" onclick="submitMuNote()">Post Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>Fan-made frame data tool inspired by Super Smash Bros. Melee &mdash; Nintendo / HAL Laboratory. Not affiliated with or endorsed by Nintendo.</footer>
+
+<script>
+let allChars     = [];
+let activeCharId = null;
+let activeCmId   = null;
+let activeMuId   = null;
+
+const TABS = ['chars','compare','filter','matchups'];
+function showTab(name) {
+  TABS.forEach(t => {
+    document.getElementById('tab-'+t).style.display = (t===name)?'':'none';
+  });
+  document.querySelectorAll('nav button').forEach((b,i)=>{
+    b.classList.toggle('active', TABS[i]===name);
+  });
+  const sidebar = document.getElementById('sidebar');
+  sidebar.style.display = (name==='chars'||name==='matchups') ? '' : 'none';
+  if(name==='matchups') loadMatchups();
+}
+
+function fadvClass(v) {
+  if(v===null||v===undefined) return 'fadv-zer';
+  return v>0?'fadv-pos':v<0?'fadv-neg':'fadv-zer';
+}
+function fadvStr(v) {
+  if(v===null||v===undefined) return '—';
+  return (v>0?'+':'')+v;
+}
+function chipHtml(type) {
+  return `<span class="chip chip-${type}">${type}</span>`;
+}
+function scoreClass(s) {
+  if(!s&&s!==0) return 'mu-zer';
+  return s>0?'mu-pos':s<0?'mu-neg':'mu-zer';
+}
+function scoreStr(s) {
+  if(s===null||s===undefined) return '?';
+  return (s>0?'+':'')+s;
+}
+async function apiFetch(url) {
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+async function init() {
+  allChars = await apiFetch('/api/characters');
+  const list = document.getElementById('char-list');
+  const muSel = document.getElementById('mu-char-filter');
+  list.innerHTML = '';
+  allChars.forEach(ch => {
+    const b = document.createElement('button');
+    b.className = 'char-btn';
+    b.innerHTML = `${ch.char_name}<span class="tier-badge tier-${ch.tier}">${ch.tier}</span>`;
+    b.onclick = () => loadCharacter(ch.char_id);
+    list.appendChild(b);
+    const opt = document.createElement('option');
+    opt.value = ch.char_id;
+    opt.textContent = ch.char_name;
+    muSel.appendChild(opt);
+  });
+  const moveNames = await apiFetch('/api/move_names');
+  const sel = document.getElementById('cmp-move');
+  moveNames.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    sel.appendChild(o);
+  });
+}
+
+async function loadCharacter(charId) {
+  activeCharId = charId;
+  document.querySelectorAll('.char-btn').forEach((b,i)=>{
+    b.classList.toggle('active', allChars[i]?.char_id===charId);
+  });
+  const detail = document.getElementById('char-detail');
+  detail.innerHTML = '<p class="loading">Loading…</p>';
+  const data = await apiFetch(`/api/characters/${charId}`);
+  const ch = data.character;
+  const moves = data.moves;
+  const byType = {};
+  moves.forEach(m => { (byType[m.move_type] = byType[m.move_type]||[]).push(m); });
+  let moveSections = '';
+  ['ground','aerial','special','grab'].forEach(type => {
+    if(!byType[type]) return;
+    moveSections += `
+      <h3 style="margin:14px 0 6px;text-transform:capitalize">${type} Moves</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Move</th><th>Input</th><th>Startup</th><th>Active</th>
+          <th>Total</th><th>Damage</th><th>Shld Stun</th><th>Frame Adv</th>
+        </tr></thead>
+        <tbody>
+          ${byType[type].map(m=>`
+          <tr onclick="openMoveNotes(${m.cm_id},'${ch.char_name} — ${m.move_name}')" title="Click to view community notes">
+            <td><strong>${m.move_name}</strong></td>
+            <td style="font-family:monospace;font-size:.78rem;color:var(--muted)">${m.input_command||'—'}</td>
+            <td><strong style="color:var(--gold)">${m.startup_frames}</strong></td>
+            <td>${m.active_frames}</td>
+            <td>${m.total_frames}</td>
+            <td>${m.damage}%</td>
+            <td>${m.shield_stun??'—'}</td>
+            <td class="${fadvClass(m.frame_advantage)}">${fadvStr(m.frame_advantage)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  });
+  detail.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h2 style="font-size:1.3rem">${ch.char_name}
+        <span class="tier-badge tier-${ch.tier}" style="font-size:.75rem;vertical-align:middle;margin-left:8px">Tier ${ch.tier}</span>
+      </h2>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-item"><div class="val">${ch.weight}</div><div class="lbl">Weight</div></div>
+      <div class="stat-item"><div class="val">${ch.gravity}</div><div class="lbl">Gravity</div></div>
+      <div class="stat-item"><div class="val">${ch.fall_speed}</div><div class="lbl">Fall Speed</div></div>
+      <div class="stat-item"><div class="val">${ch.air_speed}</div><div class="lbl">Air Speed</div></div>
+      <div class="stat-item"><div class="val">${ch.run_speed}</div><div class="lbl">Run Speed</div></div>
+      <div class="stat-item"><div class="val">${moves.length}</div><div class="lbl">Moves</div></div>
+    </div>
+    <p style="font-size:.73rem;color:var(--muted);margin-bottom:4px">Click any move row to view &amp; add community notes.</p>
+    ${moveSections}`;
+}
+
+async function openMoveNotes(cmId, title) {
+  activeCmId = cmId;
+  document.getElementById('modal-move-title').textContent = title;
+  document.getElementById('new-move-note').value = '';
+  document.getElementById('new-move-author').value = '';
+  document.getElementById('overlay-move').classList.add('show');
+  await reloadMoveNotes();
+}
+async function reloadMoveNotes() {
+  const body = document.getElementById('modal-move-body');
+  body.innerHTML = '<p class="loading">Loading notes…</p>';
+  const data = await apiFetch(`/api/move_notes/${activeCmId}`);
+  const notes = data.notes;
+  if(!notes.length) { body.innerHTML = '<p class="empty">No community notes yet. Be the first!</p>'; return; }
+  body.innerHTML = notes.map(n=>`
+    <div class="note-item">
+      <div>${n.note_text}</div>
+      <div class="author">— ${n.note_author} &nbsp;·&nbsp; ${n.note_date}</div>
+    </div>`).join('');
+}
+async function submitMoveNote() {
+  const text   = document.getElementById('new-move-note').value.trim();
+  const author = document.getElementById('new-move-author').value.trim()||'Anonymous';
+  if(!text) return;
+  await fetch('/api/notes', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({note_cm_id: activeCmId, note_text: text, note_author: author}),
+  });
+  document.getElementById('new-move-note').value = '';
+  await reloadMoveNotes();
+}
+
+async function runCompare() {
+  const move = document.getElementById('cmp-move').value;
+  if(!move) return;
+  const rows = await apiFetch(`/api/compare?move_name=${encodeURIComponent(move)}`);
+  const el = document.getElementById('cmp-result');
+  if(!rows.length) { el.innerHTML='<p class="empty">No data found.</p>'; return; }
+  el.innerHTML = `
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:8px">
+      ${rows.length} characters have <strong>${move}</strong> — sorted by startup (fastest first)
+    </p>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Character</th><th>Tier</th><th>Type</th><th>Startup</th>
+        <th>Active</th><th>Total</th><th>Damage</th><th>Shld Stun</th><th>Frame Adv</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r=>`
+        <tr>
+          <td><strong>${r.char_name}</strong></td>
+          <td><span class="tier-badge tier-${r.tier}">${r.tier}</span></td>
+          <td>${chipHtml(r.move_type)}</td>
+          <td><strong style="color:var(--gold)">${r.startup_frames}</strong></td>
+          <td>${r.active_frames}</td><td>${r.total_frames}</td>
+          <td>${r.damage}%</td><td>${r.shield_stun??'—'}</td>
+          <td class="${fadvClass(r.frame_advantage)}">${fadvStr(r.frame_advantage)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+async function runFilter() {
+  const startup  = document.getElementById('f-startup').value;
+  const damage   = document.getElementById('f-damage').value;
+  const type     = document.getElementById('f-type').value;
+  const safeOnly = document.getElementById('f-safe').checked ? '1' : '';
+  const params = new URLSearchParams();
+  if(startup)  params.set('max_startup', startup);
+  if(damage)   params.set('min_damage',  damage);
+  if(type)     params.set('move_type',   type);
+  if(safeOnly) params.set('safe_only',   '1');
+  const rows = await apiFetch('/api/filter?'+params);
+  const el = document.getElementById('filter-result');
+  if(!rows.length) { el.innerHTML='<p class="empty">No moves match your criteria.</p>'; return; }
+  el.innerHTML = `
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:8px">
+      ${rows.length} moves found — click a row to view community notes
+    </p>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Character</th><th>Move</th><th>Type</th><th>Startup</th>
+        <th>Active</th><th>Total</th><th>Damage</th><th>Frame Adv</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r=>`
+        <tr onclick="openMoveNotes(${r.cm_id},'${r.char_name} — ${r.move_name}')" title="Click for notes">
+          <td><strong>${r.char_name}</strong></td>
+          <td>${r.move_name}</td>
+          <td>${chipHtml(r.move_type)}</td>
+          <td><strong style="color:var(--gold)">${r.startup_frames}</strong></td>
+          <td>${r.active_frames}</td><td>${r.total_frames}</td>
+          <td>${r.damage}%</td>
+          <td class="${fadvClass(r.frame_advantage)}">${fadvStr(r.frame_advantage)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+function clearFilter() {
+  document.getElementById('f-startup').value='';
+  document.getElementById('f-damage').value='';
+  document.getElementById('f-type').value='';
+  document.getElementById('f-safe').checked=false;
+  document.getElementById('filter-result').innerHTML='<p class="empty">Set criteria above and click Search.</p>';
+}
+
+async function loadMatchups() {
+  const charId = document.getElementById('mu-char-filter').value;
+  const url = '/api/matchups' + (charId ? `?char_id=${charId}` : '');
+  const rows = await apiFetch(url);
+  const el = document.getElementById('matchup-result');
+  if(!rows.length) { el.innerHTML='<p class="empty">No matchups found.</p>'; return; }
+  el.innerHTML = `
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Char 1</th><th>Char 2</th><th>Advantage Score</th><th>Summary</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r=>{
+          const sc = r.advantage_score;
+          const fromPerspective = charId ? (r.c1_id==charId ? sc : sc===null?null:-sc) : sc;
+          return `
+          <tr onclick="openMatchupNotes(${r.matchup_id},'${r.char1} vs ${r.char2}')" title="Click to view notes">
+            <td><strong>${r.char1}</strong></td>
+            <td><strong>${r.char2}</strong></td>
+            <td><span class="mu-score ${scoreClass(fromPerspective)}">${scoreStr(fromPerspective)}</span></td>
+            <td style="font-size:.78rem;color:var(--muted);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${r.matchup_notes||'—'}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+async function openMatchupNotes(muId, title) {
+  activeMuId = muId;
+  document.getElementById('modal-mu-title').textContent = title;
+  document.getElementById('new-mu-note').value = '';
+  document.getElementById('new-mu-author').value = '';
+  document.getElementById('overlay-mu').classList.add('show');
+  await reloadMuNotes();
+}
+async function reloadMuNotes() {
+  const body = document.getElementById('modal-mu-body');
+  body.innerHTML = '<p class="loading">Loading…</p>';
+  const data = await apiFetch(`/api/matchups/${activeMuId}`);
+  const mu = data.matchup;
+  const notes = data.notes;
+  const sc = mu.advantage_score;
+  body.innerHTML = `
+    <div class="vs-row">
+      <div class="vs-char">${mu.char1}</div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-char">${mu.char2}</div>
+    </div>
+    <p style="text-align:center;font-size:.9rem;margin-bottom:12px">Advantage score:
+      <span class="${sc>0?'fadv-pos':sc<0?'fadv-neg':'fadv-zer'}">${scoreStr(sc)}</span>
+      <span style="color:var(--muted)">(positive = ${mu.char1} wins)</span>
+    </p>
+    ${mu.matchup_notes?`<p style="font-size:.84rem;color:var(--text);margin-bottom:12px">${mu.matchup_notes}</p>`:''}
+    <h3 style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+      Community Notes (${notes.length})
+    </h3>
+    ${notes.length
+      ? notes.map(n=>`
+          <div class="note-item">
+            <div>${n.note_text}</div>
+            <div class="author">— ${n.note_author} · ${n.note_date}</div>
+          </div>`).join('')
+      : '<p class="empty">No notes yet. Add one below!</p>'
+    }`;
+}
+async function submitMuNote() {
+  const text   = document.getElementById('new-mu-note').value.trim();
+  const author = document.getElementById('new-mu-author').value.trim()||'Anonymous';
+  if(!text) return;
+  await fetch('/api/notes', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({note_matchup_id: activeMuId, note_text: text, note_author: author}),
+  });
+  document.getElementById('new-mu-note').value='';
+  await reloadMuNotes();
+}
+
+init();
+</script>
+</body>
+</html>
